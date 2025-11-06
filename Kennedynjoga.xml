@@ -456,7 +456,7 @@
                             <field name="TEXT">abc</field>
                           </shadow>
                           <block type="text" id="*$)}hFOMKc#Q3q(R8c:N">
-                            <field name="TEXT">Max Acceptable Loss Reached:- Bots Needs Regular Update:- (T.me/kennedynjoga ) </field>
+                            <field name="TEXT">Max Acceptable Loss Reached:- Bots Needs an Update:- (t.me/kennedynjoga ) </field>
                           </block>
                         </value>
                       </block>
@@ -476,7 +476,7 @@
                         <mutation items="2"></mutation>
                         <value name="ADD0">
                           <block type="text" id="$]oX6-Opz56KO_yU*3dY">
-                            <field name="TEXT">Done! Total Set profit: Hit :- Bot Courtesy of Kennedy Njoga:- Learn to Use Bots Profitably:- T.me/kennedynjoga: = $= </field>
+                            <field name="TEXT">Done! Total Set profit: Hit :- Bot Courtesy of Kennedy Njoga:- Learn to Use Bots Profitably:- t.me/kennedynjoga: $ </field>
                           </block>
                         </value>
                         <value name="ADD1">
@@ -493,4 +493,5 @@
       </block>
     </statement>
   </block>
+
 </xml>
