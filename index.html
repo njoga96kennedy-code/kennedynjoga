@@ -6,9 +6,10 @@
   <title>MovieClub - Stream Your Favorites</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-950 text-white font-sans selection:bg-red-600 selection:text-white">
+<body class="bg-gray-950 text-white font-sans selection:bg-red-600 selection:text-white relative">
 
-  <nav class="sticky top-0 z-50 bg-gray-950/90 backdrop-blur-md border-b border-gray-800 px-4 md:px-16 py-4 flex items-center justify-between">
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-md border-b border-gray-800 px-4 md:px-16 py-4 flex items-center justify-between">
     <div class="flex items-center space-x-8">
       <h1 class="text-2xl font-black tracking-wider text-red-600 uppercase cursor-pointer" onclick="loadDefaultHome()">MovieClub</h1>
       <div class="hidden md:flex space-x-6 text-sm font-medium text-gray-300">
@@ -25,6 +26,7 @@
     </div>
   </nav>
 
+  <!-- Hero Banner -->
   <header id="hero-banner" class="relative h-[65vh] md:h-[75vh] flex items-end p-6 md:p-16 overflow-hidden bg-cover bg-center transition-all duration-500" style="background-image: linear-gradient(to top, #030712 10%, transparent 70%), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925');">
     <div class="relative z-10 max-w-2xl space-y-4">
       <span class="bg-red-600/20 text-red-500 border border-red-600/30 text-xs font-bold uppercase px-3 py-1 rounded-md tracking-wider">Featured Blockbuster</span>
@@ -41,20 +43,31 @@
     </div>
   </header>
 
+  <!-- Main Grid -->
   <main class="px-4 md:px-16 py-12 space-y-12">
-    
     <section class="space-y-6">
       <div class="flex items-center justify-between border-b border-gray-800 pb-3">
         <h3 id="section-title" class="text-xl md:text-2xl font-bold tracking-wide">Popular Releases</h3>
         <span id="movie-count" class="text-xs text-gray-500 font-medium"></span>
       </div>
-      
       <div id="movie-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
         <p class="text-gray-400 col-span-full text-center py-10">Loading catalog items...</p>
       </div>
     </section>
-
   </main>
+
+  <!-- Detail Popup Modal Layer -->
+  <div id="detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl relative transition-transform transform scale-95 duration-300" id="modal-card">
+      <button onclick="closeModal()" class="absolute top-4 right-4 z-10 bg-gray-950/60 hover:bg-red-600 text-white rounded-full p-2 transition focus:outline-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div id="modal-content-loader" class="text-center py-20 text-gray-400">Fetching cinematic details...</div>
+      <div id="modal-body" class="hidden">
+        <!-- Injected via JavaScript dynamically -->
+      </div>
+    </div>
+  </div>
 
   <footer class="border-t border-gray-900 bg-gray-950 px-6 py-8 text-center text-xs text-gray-500">
     <p>&copy; 2026 MovieClub. Synchronized with public database systems. Built for personal portfolios.</p>
@@ -63,35 +76,41 @@
   <script>
     const API_KEY = '8baf63504edac868f508ee3c0ac18f0f';
     const BASE_URL = 'https://api.themoviedb.org/3';
-    const IMAGE_URL = 'https://image.tmdb.org/t/p/w1280'; // high-res for banner
-    const POSTER_URL = 'https://image.tmdb.org/t/p/w500'; // regular size for cards
+    const IMAGE_URL = 'https://image.tmdb.org/t/p/w1280'; 
+    const POSTER_URL = 'https://image.tmdb.org/t/p/w500'; 
 
     const movieGrid = document.getElementById('movie-grid');
     const sectionTitle = document.getElementById('section-title');
     const movieCount = document.getElementById('movie-count');
     const searchInput = document.getElementById('search-input');
 
-    // Hero elements
     const heroBanner = document.getElementById('hero-banner');
     const heroTitle = document.getElementById('hero-title');
     const heroOverview = document.getElementById('hero-overview');
 
-    // Default configuration initialization
+    // Modal DOM Nodes
+    const detailModal = document.getElementById('detail-modal');
+    const modalBody = document.getElementById('modal-body');
+    const modalLoader = document.getElementById('modal-content-loader');
+    const modalLayoutCard = document.getElementById('modal-card');
+
     async function initApp() {
       await loadHeroSection();
       await fetchCategory('movie/popular', 'Popular Releases');
       setupSearch();
     }
 
-    // Dynamic Top Header Loader
     async function loadHeroSection() {
       try {
         const response = await fetch(`${BASE_URL}/trending/movie/day?api_key=${API_KEY}`);
         const data = await response.json();
         if(data.results && data.results.length > 0) {
-          const topMovie = data.results[0]; // Fetch the #1 trending item
+          const topMovie = data.results[0]; 
           heroTitle.innerText = topMovie.title;
           heroOverview.innerText = topMovie.overview;
+          // Set click handler for main banner hero item as well
+          heroBanner.setAttribute('onclick', `openModal(${topMovie.id})`);
+          heroBanner.classList.add('cursor-pointer');
           if(topMovie.backdrop_path) {
             heroBanner.style.backgroundImage = `linear-gradient(to top, #030712 10%, transparent 70%), url('${IMAGE_URL}${topMovie.backdrop_path}')`;
           }
@@ -101,7 +120,6 @@
       }
     }
 
-    // Reusable Category Switcher
     async function fetchCategory(endpoint, titleLabel) {
       try {
         movieGrid.innerHTML = '<p class="text-gray-400 col-span-full text-center py-10">Updating shelf contents...</p>';
@@ -140,11 +158,10 @@
           } else if (query.length === 0) {
             loadDefaultHome();
           }
-        }, 400); // 400ms debounce buffer time to save API rate allotments
+        }, 400); 
       });
     }();
 
-    // Core Template Builder and Interface Renderer
     function renderGrid(movies) {
       movieGrid.innerHTML = '';
       if (!movies || movies.length === 0) {
@@ -158,7 +175,7 @@
         const score = movie.vote_average ? movie.vote_average.toFixed(1) : 'NR';
 
         const card = `
-          <div class="group relative bg-gray-900 rounded-xl overflow-hidden cursor-pointer border border-gray-800 hover:border-gray-700 transition duration-300 transform hover:-translate-y-1 shadow-lg">
+          <div onclick="openModal(${movie.id})" class="group relative bg-gray-900 rounded-xl overflow-hidden cursor-pointer border border-gray-800 hover:border-gray-700 transition duration-300 transform hover:-translate-y-1 shadow-lg">
             <div class="aspect-[2/3] w-full bg-gray-800 overflow-hidden relative">
               <img src="${poster}" alt="${movie.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy">
               <span class="absolute top-2 right-2 bg-gray-950/80 backdrop-blur-md text-yellow-500 text-xs font-bold px-2 py-0.5 rounded border border-gray-800">HD</span>
@@ -176,6 +193,68 @@
       });
     }
 
+    // Modal Control Routines
+    async function openModal(movieId) {
+      // Unfreeze overlay wrapper, trigger CSS transition hooks
+      detailModal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      modalLoader.classList.remove('hidden');
+      modalBody.classList.add('hidden');
+      
+      setTimeout(() => {
+        modalLayoutCard.classList.remove('scale-95');
+        modalLayoutCard.classList.add('scale-100');
+      }, 10);
+
+      try {
+        const response = await fetch(`${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US`);
+        const movie = await response.json();
+        
+        const runtime = movie.runtime ? `${movie.runtime} min` : 'N/A';
+        const genres = movie.genres ? movie.genres.map(g => g.name).join(', ') : 'Unknown';
+        const backdrop = movie.backdrop_path ? `${IMAGE_URL}${movie.backdrop_path}` : '';
+        const poster = movie.poster_path ? `${POSTER_URL}${movie.poster_path}` : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000';
+
+        modalBody.innerHTML = `
+          <div class="relative h-48 md:h-64 bg-cover bg-center" style="background-image: linear-gradient(to top, #111827, transparent), url('${backdrop}')"></div>
+          <div class="p-6 md:p-8 -mt-20 relative z-10 space-y-4 md:flex md:space-x-6 md:space-y-0">
+            <div class="w-32 md:w-40 flex-shrink-0 mx-auto md:mx-0 shadow-2xl rounded-xl overflow-hidden border border-gray-800">
+              <img src="${poster}" class="w-full object-cover aspect-[2/3]" alt="">
+            </div>
+            <div class="space-y-3 flex-1 pt-4 md:pt-16">
+              <h3 class="text-xl md:text-3xl font-extrabold tracking-tight">${movie.title}</h3>
+              <p class="text-xs text-gray-400 font-medium flex flex-wrap gap-2">
+                <span class="bg-gray-800 px-2 py-0.5 rounded text-yellow-500 font-bold">★ ${movie.vote_average.toFixed(1)}</span>
+                <span class="bg-gray-800 px-2 py-0.5 rounded">${movie.release_date ? movie.release_date.split('-')[0] : 'N/A'}</span>
+                <span class="bg-gray-800 px-2 py-0.5 rounded">${runtime}</span>
+              </p>
+              <p class="text-xs text-red-400 font-semibold uppercase tracking-wider">${genres}</p>
+              <p class="text-sm text-gray-300 leading-relaxed pt-2">${movie.overview || 'No overview available.'}</p>
+            </div>
+          </div>
+        `;
+        
+        modalLoader.classList.add('hidden');
+        modalBody.classList.remove('hidden');
+      } catch (error) {
+        modalLoader.innerHTML = '<p class="text-red-500 p-6">Failed to recover movie item parameters.</p>';
+      }
+    }
+
+    function closeModal() {
+      modalLayoutCard.classList.remove('scale-100');
+      modalLayoutCard.classList.add('scale-95');
+      setTimeout(() => {
+        detailModal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }, 150);
+    }
+
+    // Close modal if clicking background outside container card
+    detailModal.addEventListener('click', (e) => {
+      if (e.target === detailModal) closeModal();
+    });
+
     function loadDefaultHome() {
       searchInput.value = '';
       fetchCategory('movie/popular', 'Popular Releases');
@@ -185,7 +264,6 @@
       movieGrid.innerHTML = '<p class="text-red-500 col-span-full text-center py-10">Network exception or invalid query payload. Please try again.</p>';
     }
 
-    // Trigger on structural initial load
     initApp();
   </script>
 </body>
