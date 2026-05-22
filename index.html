@@ -1,274 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cineby Clone</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-<style>
-body { background:#141414; color:white; }
-.scroll::-webkit-scrollbar { display:none; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MovieClub - Stream Your Favorites</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom hidden scrollbar style across horizontal rows */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
+<body class="bg-[#141414] text-white font-sans selection:bg-red-600 selection:text-white overflow-x-hidden">
 
-<body>
+  <!-- Navigation Bar -->
+  <nav class="sticky top-0 z-50 bg-[#141414]/95 backdrop-blur-md border-b border-gray-800/60 px-4 md:px-16 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-8">
+      <h1 class="text-2xl font-black tracking-wider text-red-600 uppercase cursor-pointer transition hover:scale-102" onclick="loadDefaultHome()">MovieClub</h1>
+      <div class="hidden md:flex space-x-6 text-sm font-medium text-gray-300">
+        <a href="#" onclick="loadDefaultHome()" class="hover:text-white transition">Home</a>
+        <a href="#" onclick="displayWatchlist()" class="text-red-500 hover:text-red-400 font-semibold transition flex items-center space-x-1">
+          <span>My Watchlist</span>
+          <span id="watchlist-count" class="bg-red-600/20 text-red-500 px-2 py-0.5 rounded-full text-xs border border-red-600/30">0</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="relative">
+        <input type="text" id="search-input" placeholder="Search movies..." class="bg-gray-900/90 border border-gray-700 text-sm px-4 py-2 rounded-full focus:outline-none focus:border-red-600 text-gray-200 w-40 sm:w-64 transition-all">
+      </div>
+      <button class="bg-red-600 hover:bg-red-700 px-5 py-2 text-sm font-semibold rounded-full transition shadow-lg shadow-red-600/20 whitespace-nowrap">Sign In</button>
+    </div>
+  </nav>
 
-<!-- NAV -->
-<div class="flex justify-between items-center p-4 bg-black sticky top-0 z-50">
-  <h1 class="text-red-600 text-xl font-bold">Cineby</h1>
-  <button onclick="login()" class="bg-red-600 px-4 py-1 rounded">Login</button>
-</div>
+  <!-- Hero Section (Featured Movie Banner) -->
+  <header id="hero-banner" class="relative h-[70vh] md:h-[85vh] flex items-end p-6 md:p-16 overflow-hidden bg-cover bg-center transition-all duration-700 shadow-2xl" style="background-image: linear-gradient(to top, #141414 10%, transparent 65%), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1925');">
+    <div class="relative z-10 max-w-2xl space-y-4">
+      <span class="bg-red-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-md tracking-wider">Featured Blockbuster</span>
+      <h2 id="hero-title" class="text-3xl md:text-6xl font-extrabold tracking-tight drop-shadow-md">Loading Features...</h2>
+      <p id="hero-overview" class="text-gray-300 text-xs md:text-base leading-relaxed line-clamp-3 drop-shadow">Please wait while we connect to cinema databases.</p>
+      <div class="pt-2 flex space-x-4">
+        <button id="hero-play-btn" class="bg-white text-black hover:bg-gray-200 px-6 py-3 font-bold rounded-md transition flex items-center space-x-2 text-sm md:text-base shadow-lg">
+          <span>▶ Play Trailer</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-<!-- HERO -->
-<div id="hero" class="h-[60vh] bg-cover flex items-end p-6">
-  <div>
-    <h1 id="hero-title" class="text-3xl font-bold"></h1>
-    <button onclick="playStream(currentStream)" class="bg-white text-black px-4 py-2 mt-3">
-      ▶ Play
-    </button>
+  <!-- Main Multi-Row Shelf Layout Container -->
+  <main id="main-content" class="relative z-20 px-4 md:px-16 py-8 space-y-12 -mt-16 md:-mt-24">
+    <!-- Component elements injected dynamically by JS compiler context below -->
+    <div id="dynamic-shelves" class="space-y-10"></div>
+  </main>
+
+  <!-- Video Stream Overlay Lightbox Modal -->
+  <div id="video-modal" class="fixed inset-0 bg-black/95 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-all duration-300">
+    <div class="relative w-full max-w-4xl aspect-video bg-gray-900 rounded-xl overflow-hidden border border-gray-800 shadow-2xl">
+      <button onclick="closeVideoPlayer()" class="absolute top-4 right-4 bg-black/60 hover:bg-black/90 text-white h-10 w-10 flex items-center justify-center rounded-full border border-gray-700 font-bold transition z-50">✕</button>
+      <div id="player-target" class="w-full h-full"></div>
+    </div>
   </div>
-</div>
 
-<!-- CONTINUE -->
-<div class="p-4">
-  <h2 class="text-xl mb-2">Continue Watching</h2>
-  <div id="continue" class="flex space-x-4 overflow-x-scroll scroll"></div>
-</div>
+  <!-- Footer -->
+  <footer class="border-t border-gray-900 bg-[#141414] px-6 py-12 text-center text-xs text-gray-500">
+    <p>&copy; 2026 MovieClub. Synchronized with public cloud databases via TMDB API. Multi-row layout engine built for portfolios.</p>
+  </footer>
 
-<!-- MOVIES -->
-<div class="p-4">
-  <h2 class="text-xl mb-2">Movies</h2>
-  <div id="movies" class="flex space-x-4 overflow-x-scroll scroll"></div>
-</div>
+  <!-- Unified Script Engine Context -->
+  <script>
+    const API_KEY = '8baf63504edac868f508ee3c0ac18f0f';
+    const BASE_URL = 'https://api.themoviedb.org/3';
+    const IMAGE_URL = 'https://image.tmdb.org/t/p/w1280';
+    const POSTER_URL = 'https://image.tmdb.org/t/p/w500';
 
-<!-- SERIES -->
-<div class="p-4">
-  <h2 class="text-xl mb-2">Series</h2>
-  <div id="series" class="flex space-x-4 overflow-x-scroll scroll"></div>
-</div>
+    const mainContent = document.getElementById('main-content');
+    const dynamicShelves = document.getElementById('dynamic-shelves');
+    const searchInput = document.getElementById('search-input');
+    const watchlistCountBadge = document.getElementById('watchlist-count');
+    const videoModal = document.getElementById('video-modal');
+    const playerTarget = document.getElementById('player-target');
 
-<!-- SERIES MODAL -->
-<div id="seriesModal" class="fixed inset-0 bg-black hidden p-6 overflow-y-auto">
-  <button onclick="closeSeries()" class="bg-red-600 px-3 py-1 mb-4">Close</button>
-  <div id="episodes"></div>
-</div>
+    // Hero elements
+    const heroBanner = document.getElementById('hero-banner');
+    const heroTitle = document.getElementById('hero-title');
+    const heroOverview = document.getElementById('hero-overview');
+    const heroPlayBtn = document.getElementById('hero-play-btn');
 
-<!-- PLAYER -->
-<div id="modal" class="fixed inset-0 bg-black hidden items-center justify-center">
-  <div class="w-[90%] md:w-[70%]">
-    <video id="video" controls class="w-full"></video>
-    <button onclick="closePlayer()" class="mt-2 bg-red-600 px-3 py-1">Close</button>
-  </div>
-</div>
+    let mode = 'home'; // 'home', 'search', or 'watchlist'
+    let watchlist = JSON.parse(localStorage.getItem('movieclub_watchlist')) || [];
+    
+    // Global pagination object tracker to monitor separate states for individual rows
+    let rowPaginationTracker = {};
+    let trackObserver;
 
-<script>
-const API = "http://localhost:5000/api"; // CHANGE AFTER DEPLOY
-let token = localStorage.getItem("token") || "";
+    // App Initialize entry block
+    async function initApp() {
+      updateWatchlistBadge();
+      initIntersectionObserver();
+      await loadHeroSection();
+      await buildNetflixShelves();
+      setupSearch();
+    }
 
-let currentStream = "";
-let currentMovieId = "";
-let interval;
+    // Initialize global intersection controller targeting horizontal anchors
+    function initIntersectionObserver() {
+      trackObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const targetRowId = entry.target.dataset.rowId;
+            const endpoint = entry.target.dataset.endpoint;
+            
+            // Check flags to avoid racing loops or over-fetching past total counts
+            if (rowPaginationTracker[targetRowId] && !rowPaginationTracker[targetRowId].isFetching) {
+              fetchNextRowPage(targetRowId, endpoint);
+            }
+          }
+        });
+      }, {
+        root: null, // Scans within the layout context view window bounds
+        rootMargin: '0px 300px 0px 0px' // Pre-fetches entries 300px before sliding completely past edge view
+      });
+    }
 
-// INIT
-init();
+    // Dynamic Top Header Loader
+    async function loadHeroSection() {
+      try {
+        const response = await fetch(`${BASE_URL}/trending/movie/day?api_key=${API_KEY}`);
+        const data = await response.json();
+        if(data.results && data.results.length > 0) {
+          const topMovie = data.results[0];
+          heroTitle.innerText = topMovie.title;
+          heroOverview.innerText = topMovie.overview;
+          if(topMovie.backdrop_path) {
+            heroBanner.style.backgroundImage = `linear-gradient(to top, #141414 10%, transparent 65%), url('${IMAGE_URL}${topMovie.backdrop_path}')`;
+          }
+          heroPlayBtn.onclick = () => launchVideoPlayer(topMovie.id);
+        }
+      } catch (error) {
+        console.error("Hero pipeline link fault:", error);
+      }
+    }
 
-async function init() {
-  await loadMovies();
-  await loadSeries();
-  loadContinue();
-}
+    // Build configuration and map states natively
+    async function buildNetflixShelves() {
+      mode = 'home';
+      dynamicShelves.innerHTML = '';
+      rowPaginationTracker = {}; // Wipe historical tracking flags
 
-// LOGIN
-async function login() {
-  const email = prompt("Email:");
-  const password = prompt("Password:");
+      const rowsConfig = [
+        { title: 'Popular Releases', endpoint: 'movie/popular' },
+        { title: 'Top Rated Masters', endpoint: 'movie/top_rated' },
+        { title: 'Upcoming Blockbusters', endpoint: 'movie/upcoming' },
+        { title: 'Trending Action Hits', endpoint: 'trending/movie/week' }
+      ];
 
-  const res = await fetch(API + "/auth/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ email, password })
-  });
+      for (const row of rowsConfig) {
+        const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+        
+        // Initialize dynamic operational limits tracking for this unique row
+        rowPaginationTracker[rowId] = {
+          currentPage: 1,
+          isFetching: false,
+          totalResultPages: 1
+        };
 
-  const data = await res.json();
-  token = data.token;
-  localStorage.setItem("token", token);
+        try {
+          const response = await fetch(`${BASE_URL}/${row.endpoint}?api_key=${API_KEY}&language=en-US&page=1`);
+          const data = await response.json();
+          
+          if (data.results && data.results.length > 0) {
+            rowPaginationTracker[rowId].totalResultPages = data.total_pages;
+            createRowUI(rowId, row.title, row.endpoint, data.results);
+          }
+        } catch (err) {
+          console.error(`Fault loading shelf row: ${row.title}`, err);
+        }
+      }
+    }
 
-  alert("Logged in!");
-}
+    // Inject horizontal UI shelf elements along with infinite scroll trigger anchor
+    function createRowUI(rowId, title, endpoint, movies) {
+      let cardsHtml = '';
+      movies.forEach(movie => {
+        cardsHtml += compileMovieCard(movie);
+      });
 
-// MOVIES
-async function loadMovies() {
-  const res = await fetch(API + "/movies");
-  const data = await res.json();
+      const shelfHtml = `
+        <section class="space-y-3 relative group">
+          <h3 class="text-lg md:text-xl font-bold tracking-wide text-gray-200 group-hover:text-white transition">${title}</h3>
+          <div class="relative overflow-visible">
+            <div id="${rowId}" class="flex space-x-4 overflow-x-scroll scroll-smooth scrollbar-hide py-3 px-1 snap-x">
+              ${cardsHtml}
+              
+              <!-- INFINITE SCROLL HORIZONTAL ROW TRIGGER ANCHOR -->
+              <div id="anchor-${rowId}" data-row-id="${rowId}" data-endpoint="${endpoint}" class="flex-none w-[100px] flex items-center justify-center bg-gray-900/40 rounded-lg border border-dashed border-gray-800 snap-start">
+                <div class="text-center space-y-1 text-xs text-gray-500 font-medium">
+                  <span class="inline-block animate-spin text-red-500">⏳</span>
+                  <p class="px-1">More...</p>
+                </div>
+              </div>
 
-  const container = document.getElementById("movies");
-  container.innerHTML = "";
-
-  data.forEach(m => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <img src="${m.poster}" class="w-[150px] rounded cursor-pointer">
-      <p>${m.title}</p>
-    `;
-
-    div.onclick = () => {
-      currentMovieId = m.id;
-      currentStream = API + "/stream/" + m.id;
-      playStream(currentStream);
-    };
-
-    container.appendChild(div);
-  });
-
-  // HERO
-  const first = data[0];
-  if (first) {
-    document.getElementById("hero").style.backgroundImage = `url(${first.backdrop})`;
-    document.getElementById("hero-title").innerText = first.title;
-  }
-}
-
-// SERIES
-async function loadSeries() {
-  const res = await fetch(API + "/series");
-  const data = await res.json();
-
-  const container = document.getElementById("series");
-  container.innerHTML = "";
-
-  data.forEach(show => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <img src="${show.poster}" class="w-[150px] rounded cursor-pointer">
-      <p>${show.title}</p>
-    `;
-
-    div.onclick = () => openSeries(show);
-
-    container.appendChild(div);
-  });
-}
-
-// OPEN SERIES
-function openSeries(show) {
-  const modal = document.getElementById("seriesModal");
-  const container = document.getElementById("episodes");
-
-  modal.classList.remove("hidden");
-  container.innerHTML = "";
-
-  show.seasons.forEach(season => {
-    const sDiv = document.createElement("div");
-
-    sDiv.innerHTML = `<h2 class="text-xl mt-4">Season ${season.season}</h2>`;
-
-    season.episodes.forEach(ep => {
-      const eDiv = document.createElement("div");
-
-      eDiv.innerHTML = `
-        <p>${ep.episode}. ${ep.title}</p>
-        <button class="bg-red-600 px-2 py-1 mt-1">▶ Play</button>
-      `;
-
-      eDiv.onclick = () => {
-        currentMovieId = show.id + "_" + ep.episode;
-        currentStream = ep.stream;
-        playStream(currentStream);
-      };
-
-      sDiv.appendChild(eDiv);
-    });
-
-    container.appendChild(sDiv);
-  });
-}
-
-function closeSeries() {
-  document.getElementById("seriesModal").classList.add("hidden");
-}
-
-// PLAYER
-function playStream(url) {
-  if (!token) return alert("Login first");
-
-  const video = document.getElementById("video");
-  document.getElementById("modal").classList.remove("hidden");
-
-  if (Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(url);
-    hls.attachMedia(video);
-  } else {
-    video.src = url;
-  }
-
-  video.play();
-
-  const saved = JSON.parse(localStorage.getItem("progress")) || {};
-  if (saved[currentMovieId]) {
-    video.currentTime = saved[currentMovieId].time;
-  }
-
-  clearInterval(interval);
-  interval = setInterval(() => saveProgress(video), 5000);
-}
-
-function closePlayer() {
-  document.getElementById("modal").classList.add("hidden");
-  document.getElementById("video").src = "";
-  clearInterval(interval);
-}
-
-// PROGRESS
-function saveProgress(video) {
-  if (!video.duration) return;
-
-  const progress = JSON.parse(localStorage.getItem("progress")) || {};
-
-  progress[currentMovieId] = {
-    time: video.currentTime,
-    duration: video.duration,
-    updated: Date.now()
-  };
-
-  localStorage.setItem("progress", JSON.stringify(progress));
-  loadContinue();
-}
-
-// CONTINUE WATCHING
-function loadContinue() {
-  const container = document.getElementById("continue");
-  container.innerHTML = "";
-
-  const progress = JSON.parse(localStorage.getItem("progress")) || {};
-
-  Object.keys(progress)
-    .sort((a,b) => progress[b].updated - progress[a].updated)
-    .forEach(id => {
-      const item = progress[id];
-
-      const div = document.createElement("div");
-
-      div.innerHTML = `
-        <div class="w-[150px]">
-          <div class="bg-gray-700 h-1">
-            <div class="bg-red-600 h-1" style="width:${(item.time/item.duration)*100}%"></div>
+            </div>
           </div>
-          <button class="bg-red-600 mt-2 px-2 py-1 text-xs">Resume</button>
+        </section>
+      `;
+      dynamicShelves.innerHTML += shelfHtml;
+
+      // Bind freshly compiled tracking node target to observer loop immediately
+      setTimeout(() => {
+        const targetAnchor = document.getElementById(`anchor-${rowId}`);
+        if(targetAnchor) trackObserver.observe(targetAnchor);
+      }, 50);
+    }
+
+    // Incremental pipeline fetch loop for handling distinct category segments
+    async function fetchNextRowPage(rowId, endpoint) {
+      const rowState = rowPaginationTracker[rowId];
+      if (rowState.currentPage >= rowState.totalResultPages) {
+        // Disconnect tracking loop if we hit remote storage borders
+        const anchorNode = document.getElementById(`anchor-${rowId}`);
+        if (anchorNode) trackObserver.unobserve(anchorNode);
+        anchorNode.remove();
+        return;
+      }
+
+      rowState.isFetching = true;
+      rowState.currentPage++;
+
+      try {
+        const response = await fetch(`${BASE_URL}/${endpoint}?api_key=${API_KEY}&language=en-US&page=${rowState.currentPage}`);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const rowTrack = document.getElementById(rowId);
+          const anchorNode = document.getElementById(`anchor-${rowId}`);
+          
+          data.results.forEach(movie => {
+            // Build card element node from standard layout template framework string
+            const cardMarkup = compileMovieCard(movie);
+            
+            // Inject directly prior to the loading trigger block to preserve arrangement flow
+            anchorNode.insertAdjacentHTML('beforebegin', cardMarkup);
+          });
+        }
+      } catch (err) {
+        console.error(`Fault appending index stream segments onto channel row ${rowId}:`, err);
+      } finally {
+        rowState.isFetching = false;
+      }
+    }
+
+    // Shared movie visual node blueprint matrix compilation block
+    function compileMovieCard(movie) {
+      const poster = movie.poster_path ? `${POSTER_URL}${movie.poster_path}` : 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000';
+      const year = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
+      const score = movie.vote_average ? movie.vote_average.toFixed(1) : 'NR';
+      
+      const isSaved = watchlist.some(item => item.id === movie.id);
+      const btnClass = isSaved ? 'bg-red-600 border-red-600 text-white' : 'bg-black/70 border-gray-600 text-gray-300 hover:border-white';
+      const icon = isSaved ? '✓' : '+';
+
+      return `
+        <div class="flex-none w-[160px] sm:w-[200px] md:w-[240px] snap-start group/card relative bg-gray-900 rounded-lg overflow-hidden border border-gray-800/40 hover:border-gray-600 transition duration-300 transform hover:scale-105 shadow-xl cursor-pointer" onclick="launchVideoPlayer(${movie.id})">
+          <div class="aspect-[2/3] w-full bg-gray-800 relative">
+            <img src="${poster}" alt="${movie.title}" class="w-full h-full object-cover" loading="lazy">
+            
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/card:opacity-100 transition duration-200 flex items-start justify-end p-2">
+              <button onclick="event.stopPropagation(); toggleWatchlist(${movie.id}, '${escapeHtml(movie.title)}', '${movie.poster_path}', '${movie.release_date}', ${movie.vote_average})" 
+                      class="${btnClass} h-8 w-8 rounded-full border flex items-center justify-center font-bold text-base shadow-md transition-all transform hover:scale-110 z-30">
+                ${icon}
+              </button>
+            </div>
+          </div>
+          <div class="p-3 space-y-0.5 bg-gray-900">
+            <h4 class="font-bold text-xs md:text-sm truncate text-gray-200 group-hover/card:text-red-500 transition">${movie.title}</h4>
+            <div class="flex items-center justify-between text-[11px] text-gray-400">
+              <span>${year}</span>
+              <span class="text-yellow-500 font-semibold">★ ${score}</span>
+            </div>
+          </div>
         </div>
       `;
+    }
 
-      div.onclick = () => playStream(currentStream);
+    // Handles modal video presentation loops
+    function launchVideoPlayer(movieId) {
+      videoModal.classList.remove('hidden');
+      videoModal.classList.add('flex');
+      document.body.classList.add('overflow-hidden');
 
-      container.appendChild(div);
-    });
-}
-</script>
+      playerTarget.innerHTML = `
+        <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" 
+                title="Video Player Preview" frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+        </iframe>`;
+    }
 
+    function closeVideoPlayer() {
+      videoModal.classList.add('hidden');
+      videoModal.classList.remove('flex');
+      document.body.classList.remove('overflow-hidden');
+      playerTarget.innerHTML = '';
+    }
+
+    // Dynamic Search Infrastructure Logic
+    function setupSearch() {
+      let typingTimer;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          const query = searchInput.value.trim();
+          if (query.length > 1) {
+            executeSearch(query);
+          } else if (query.length === 0) {
+            buildNetflixShelves();
+          }
+        }, 400);
+      });
+    }
+
+    async function executeSearch(query) {
+      mode = 'search';
+      dynamicShelves.innerHTML = `
+        <section class="space-y-6">
+          <h3 class="text-xl font-bold border-b border-gray-800 pb-3">Search Results for "${query}"</h3>
+          <div id="search-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
+        </section>
+      `;
+      const searchGrid = document.getElementById('search-grid');
+
+      try {
+        const response = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=en-US&page=1`);
+        const data = await response.json();
+        
+        if (!data.results || data.results.length === 0) {
+          searchGrid.innerHTML = '<p class="text-gray-500 col-span-full py-10">No records located match query criteria.</p>';
+          return;
+        }
+
+        data.results.forEach(movie => {
+          searchGrid.innerHTML += compileMovieCard(movie);
+        });
+      } catch (error) {
+        searchGrid.innerHTML = '<p class="text-red-500 col-span-full py-10">Error fetching catalog results.</p>';
+      }
+    }
+
+    // Global toggle watchlist pipeline hook
+    window.toggleWatchlist = function(id, title, poster_path, release_date, vote_average) {
+      const index = watchlist.findIndex(item => item.id === id);
+
+      if (index === -1) {
+        watchlist.push({ id, title, poster_path, release_date, vote_average });
+      } else {
+        watchlist.splice(index, 1);
+      }
+
+      localStorage.setItem('movieclub_watchlist', JSON.stringify(watchlist));
+      updateWatchlistBadge();
+
+      if (mode === 'watchlist') {
+        displayWatchlist();
+      } else if (mode === 'home') {
+        buildNetflixShelves();
+      }
+    };
+
+    function updateWatchlistBadge() {
+      watchlistCountBadge.innerText = watchlist.length;
+    }
+
+    window.displayWatchlist = function() {
+      searchInput.value = '';
+      mode = 'watchlist';
+      dynamicShelves.innerHTML = `
+        <section class="space-y-6">
+          <h3 class="text-xl font-bold border-b border-gray-800 pb-3">My Watchlist <span class="text-xs text-gray-500 font-normal">(${watchlist.length} saved)</span></h3>
+          <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
+        </section>
+      `;
+      const watchlistGrid = document.getElementById('watchlist-grid');
+
+      if (watchlist.length === 0) {
+        watchlistGrid.innerHTML = '<p class="text-gray-500 col-span-full py-10">Your watchlist is empty.</p>';
+        return;
+      }
+
+      watchlist.forEach(movie => {
+        watchlistGrid.innerHTML += compileMovieCard(movie);
+      });
+    };
+
+    function loadDefaultHome() {
+      searchInput.value = '';
+      buildNetflixShelves();
+    }
+
+    function escapeHtml(str) {
+      if(!str) return '';
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    initApp();
+  </script>
 </body>
 </html>
