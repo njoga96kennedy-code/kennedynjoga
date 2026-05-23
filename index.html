@@ -5,546 +5,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KENFLIX</title>
 
-<link rel="preconnect" href="https://image.tmdb.org">
-
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
+body{background:#141414;color:white;overflow-x:hidden;}
 
-body{
-background:#141414;
-color:white;
-overflow-x:hidden;
-}
-
-/* NAVBAR */
-
+/* NAV */
 .nav{
 position:fixed;
-top:0;
-width:100%;
-padding:18px 50px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+top:0;width:100%;
+padding:18px 40px;
+display:flex;justify-content:space-between;
+background:linear-gradient(to bottom,rgba(0,0,0,0.8),transparent);
 z-index:1000;
-background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-transition:0.3s;
 }
-
-.logo{
-font-size:34px;
-font-weight:bold;
-color:#e50914;
-letter-spacing:1px;
-}
-
+.logo{color:#e50914;font-size:30px;font-weight:bold;}
 .search{
 background:rgba(0,0,0,0.6);
-border:1px solid rgba(255,255,255,0.2);
-padding:12px 15px;
-border-radius:30px;
-color:white;
-outline:none;
-width:260px;
-backdrop-filter:blur(10px);
+border:none;padding:10px;
+border-radius:20px;color:white;
 }
 
 /* HERO */
-
 .hero{
-height:95vh;
-background-size:cover;
-background-position:center;
-position:relative;
+height:90vh;
 display:flex;
 align-items:flex-end;
-padding:60px;
+padding:50px;
+background-size:cover;
 }
-
-.hero::after{
-content:'';
-position:absolute;
-left:0;
-bottom:0;
-width:100%;
-height:40%;
-background:linear-gradient(to top,#141414,transparent);
-}
-
-.hero-content{
-position:relative;
-z-index:2;
-max-width:600px;
-}
-
-.hero-title{
-font-size:70px;
-margin-bottom:20px;
-font-weight:bold;
-}
-
-.hero-desc{
-line-height:1.6;
-color:#ddd;
-margin-bottom:20px;
-}
-
-.hero-buttons{
-display:flex;
-gap:15px;
-}
-
-.btn{
-padding:14px 28px;
-border:none;
-border-radius:5px;
-font-size:16px;
-cursor:pointer;
-font-weight:bold;
-transition:0.3s;
-}
-
-.play-btn{
-background:white;
-color:black;
-}
-
-.play-btn:hover{
-background:#ddd;
-}
-
-.info-btn{
-background:rgba(109,109,110,0.7);
-color:white;
-}
-
-.info-btn:hover{
-background:rgba(109,109,110,0.4);
-}
+.hero-content{max-width:600px;}
+.hero h1{font-size:60px;margin-bottom:10px;}
+.hero p{color:#ddd;}
 
 /* ROWS */
-
-.row{
-margin-top:-80px;
-padding-left:40px;
-position:relative;
-z-index:3;
-margin-bottom:40px;
-}
-
-.row h2{
-margin-bottom:15px;
-font-size:24px;
-}
-
+.row{margin-top:-80px;padding-left:30px;margin-bottom:40px;}
+.row h2{margin-bottom:10px;}
 .row-posters{
-display:flex;
-overflow-x:auto;
-overflow-y:hidden;
+display:flex;overflow-x:auto;
 padding:20px 0;
-scroll-behavior:smooth;
 }
-
-.row-posters::-webkit-scrollbar{
-display:none;
-}
+.row-posters::-webkit-scrollbar{display:none;}
 
 .poster{
 width:220px;
-max-height:125px;
-object-fit:cover;
 margin-right:10px;
 border-radius:6px;
 cursor:pointer;
-transition:transform 0.35s;
+transition:0.3s;
 }
-
-.poster:hover{
-transform:scale(1.15);
-z-index:20;
-}
-
-/* MODAL */
-
-.modal{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-display:none;
-justify-content:center;
-align-items:center;
-background:rgba(0,0,0,0.95);
-z-index:5000;
-animation:fade 0.3s ease;
-}
-
-@keyframes fade{
-from{opacity:0;}
-to{opacity:1;}
-}
-
-.modal-content{
-width:90%;
-max-width:1100px;
-position:relative;
-}
-
-iframe{
-width:100%;
-height:620px;
-border:none;
-border-radius:10px;
-background:black;
-}
-
-.close{
-position:absolute;
-top:-50px;
-right:0;
-font-size:45px;
-cursor:pointer;
-}
-
-/* EPISODES */
-
-.episodes{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-margin-top:15px;
-}
-
-.episodes button{
-padding:10px 15px;
-border:none;
-background:#e50914;
-color:white;
-border-radius:5px;
-cursor:pointer;
-}
+.poster:hover{transform:scale(1.15);}
 
 /* MOBILE */
-
 @media(max-width:768px){
-
-.nav{
-padding:15px 20px;
+.hero h1{font-size:35px;}
+.poster{width:140px;}
 }
-
-.logo{
-font-size:24px;
-}
-
-.search{
-width:140px;
-padding:10px;
-}
-
-.hero{
-height:75vh;
-padding:25px;
-}
-
-.hero-title{
-font-size:40px;
-}
-
-.hero-desc{
-font-size:14px;
-}
-
-.poster{
-width:150px;
-max-height:90px;
-}
-
-iframe{
-height:250px;
-}
-
-.row{
-padding-left:20px;
-}
-
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- NAV -->
-
 <div class="nav">
-
 <div class="logo">KENFLIX</div>
-
-<input
-type="text"
-class="search"
-id="search"
-placeholder="Search movies..."
->
-
+<input type="text" id="search" class="search" placeholder="Search...">
 </div>
-
-<!-- HERO -->
 
 <div class="hero" id="hero">
-
 <div class="hero-content">
-
-<h1 class="hero-title" id="hero-title">Loading...</h1>
-
-<p class="hero-desc" id="hero-desc"></p>
-
-<div class="hero-buttons">
-
-<button class="btn play-btn" id="hero-play">
-▶ Play
-</button>
-
-<button class="btn info-btn">
-More Info
-</button>
-
+<h1 id="hero-title">Loading...</h1>
+<p id="hero-desc"></p>
 </div>
-
 </div>
-
-</div>
-
-<!-- ROWS -->
 
 <div class="row">
-
-<h2>Trending Now</h2>
-
+<h2>Trending</h2>
 <div class="row-posters" id="trending"></div>
-
 </div>
 
 <div class="row">
-
 <h2>TV Shows</h2>
-
-<div class="row-posters" id="tvshows"></div>
-
-</div>
-
-<div class="row">
-
-<h2>Top Rated</h2>
-
-<div class="row-posters" id="toprated"></div>
-
-</div>
-
-<!-- MODAL -->
-
-<div class="modal" id="modal">
-
-<div class="modal-content">
-
-<div class="close" id="close">&times;</div>
-
-<iframe
-id="player"
-allowfullscreen
-allow="autoplay"
-></iframe>
-
-<div class="episodes" id="episodes"></div>
-
-</div>
-
+<div class="row-posters" id="tv"></div>
 </div>
 
 <script>
 
-const API_KEY =
-"1d3ae144acfb6bfcb25f70361cedcf29";
+const API_KEY = "1d3ae144acfb6bfcb25f70361cedcf29";
+const IMG = "https://image.tmdb.org/t/p/original";
+const API = "https://api.themoviedb.org/3";
 
-const IMG =
-"https://image.tmdb.org/t/p/original";
+/* NAV SCROLL EFFECT */
+window.addEventListener("scroll",()=>{
+document.querySelector(".nav").style.background =
+window.scrollY > 50 ? "#111" : "transparent";
+});
 
-const API =
-"https://api.themoviedb.org/3";
-
+/* HERO */
 let heroMovie;
 
-/* FETCH ROWS */
+async function loadHero(){
+const res = await fetch(`${API}/trending/movie/week?api_key=${API_KEY}`);
+const data = await res.json();
 
+heroMovie = data.results[Math.floor(Math.random()*data.results.length)];
+
+document.getElementById("hero").style.backgroundImage =
+`linear-gradient(to top,#141414,transparent),
+url(${IMG + heroMovie.backdrop_path})`;
+
+document.getElementById("hero-title").innerText = heroMovie.title;
+document.getElementById("hero-desc").innerText = heroMovie.overview;
+}
+
+/* ROW FETCH */
 async function fetchRow(url, container, type){
-
 const res = await fetch(url);
-
 const data = await res.json();
 
 container.innerHTML = "";
 
-data.results.forEach(movie=>{
-
-if(!movie.backdrop_path) return;
+data.results.forEach(item=>{
+if(!item.backdrop_path) return;
 
 const img = document.createElement("img");
-
-img.src = IMG + movie.backdrop_path;
-
+img.src = IMG + item.backdrop_path;
 img.classList.add("poster");
 
-img.onclick = ()=>openPlayer(movie.id,type);
+img.onclick = ()=>{
+window.location.href =
+`watch.html?id=${item.id}&type=${type}`;
+};
 
 container.appendChild(img);
-
 });
-
 }
-
-/* HERO */
-
-async function loadHero(){
-
-const res = await fetch(
-`${API}/trending/movie/week?api_key=${API_KEY}`
-);
-
-const data = await res.json();
-
-heroMovie =
-data.results[
-Math.floor(Math.random()*data.results.length)
-];
-
-document.getElementById("hero")
-.style.backgroundImage =
-`linear-gradient(to top,#141414,transparent),
-url(${IMG + heroMovie.backdrop_path})`;
-
-document.getElementById("hero-title")
-.innerText = heroMovie.title;
-
-document.getElementById("hero-desc")
-.innerText = heroMovie.overview;
-
-}
-
-/* PLAYER */
-
-function openPlayer(id,type){
-
-document.getElementById("modal")
-.style.display = "flex";
-
-document.getElementById("episodes")
-.innerHTML = "";
-
-if(type === "tv"){
-
-document.getElementById("player").src =
-`https://movie.codespecters.com/embed/tv/${id}/1/1`;
-
-for(let i=1;i<=12;i++){
-
-const btn =
-document.createElement("button");
-
-btn.innerText = "Episode " + i;
-
-btn.onclick = ()=>{
-
-document.getElementById("player").src =
-`https://movie.codespecters.com/embed/tv/${id}/1/${i}`;
-
-};
-
-document.getElementById("episodes")
-.appendChild(btn);
-
-}
-
-}else{
-
-document.getElementById("player").src =
-`https://movie.codespecters.com/embed/movie/${id}`;
-
-}
-
-}
-
-/* CLOSE */
-
-document.getElementById("close")
-.onclick = ()=>{
-
-document.getElementById("modal")
-.style.display = "none";
-
-document.getElementById("player").src = "";
-
-};
-
-/* HERO PLAY */
-
-document.getElementById("hero-play")
-.onclick = ()=>{
-
-openPlayer(heroMovie.id,"movie");
-
-};
 
 /* SEARCH */
-
-document.getElementById("search")
-.addEventListener("keyup",async(e)=>{
-
+document.getElementById("search").addEventListener("keyup", async(e)=>{
 const q = e.target.value;
-
 if(q.length < 2) return;
 
 const res = await fetch(
 `${API}/search/multi?api_key=${API_KEY}&query=${q}`
 );
-
 const data = await res.json();
 
-document.getElementById("trending")
-.innerHTML = "";
+const trending = document.getElementById("trending");
+trending.innerHTML = "";
 
-data.results.forEach(movie=>{
-
-if(!movie.backdrop_path) return;
+data.results.forEach(item=>{
+if(!item.backdrop_path) return;
 
 const img = document.createElement("img");
-
-img.src = IMG + movie.backdrop_path;
-
+img.src = IMG + item.backdrop_path;
 img.classList.add("poster");
 
-img.onclick = ()=>openPlayer(
-movie.id,
-movie.media_type === "tv"
-? "tv"
-: "movie"
-);
+img.onclick = ()=>{
+window.location.href =
+`watch.html?id=${item.id}&type=${item.media_type === "tv" ? "tv":"movie"}`;
+};
 
-document.getElementById("trending")
-.appendChild(img);
-
+trending.appendChild(img);
 });
-
 });
 
 /* LOAD */
-
 loadHero();
 
 fetchRow(
@@ -555,14 +180,8 @@ document.getElementById("trending"),
 
 fetchRow(
 `${API}/tv/popular?api_key=${API_KEY}`,
-document.getElementById("tvshows"),
+document.getElementById("tv"),
 "tv"
-);
-
-fetchRow(
-`${API}/movie/top_rated?api_key=${API_KEY}`,
-document.getElementById("toprated"),
-"movie"
 );
 
 </script>
