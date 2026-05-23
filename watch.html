@@ -6,28 +6,13 @@
 <title>Watch</title>
 
 <style>
-body{
-margin:0;
-background:black;
-overflow:hidden;
-font-family:Arial;
-}
-
-iframe{
-width:100vw;
-height:100vh;
-border:none;
-}
-
+body{margin:0;background:black;}
+iframe{width:100vw;height:100vh;border:none;}
 .back{
-position:fixed;
-top:20px;
-left:20px;
+position:fixed;top:20px;left:20px;
 background:rgba(0,0,0,0.7);
-color:white;
-padding:10px 15px;
-border-radius:6px;
-text-decoration:none;
+color:white;padding:10px 15px;
+border-radius:6px;text-decoration:none;
 z-index:9999;
 }
 </style>
@@ -45,12 +30,13 @@ const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const type = params.get("type");
 
+/* 🔥 WORKING PROVIDER */
 if(type === "tv"){
 document.getElementById("player").src =
-`https://movie.codespecters.com/embed/tv/${id}/1/1`;
+`https://vidsrc.to/embed/tv/${id}/1/1`;
 }else{
 document.getElementById("player").src =
-`https://movie.codespecters.com/embed/movie/${id}`;
+`https://vidsrc.to/embed/movie/${id}`;
 }
 
 </script>
