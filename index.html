@@ -2,58 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MovieFlix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyFlix</title>
 
 <style>
 body {
   margin: 0;
-  background: #141414;
+  font-family: Arial, sans-serif;
+  background: #111;
   color: white;
-  font-family: Arial;
 }
 
-/* NAV */
 header {
-  position: fixed;
-  width: 100%;
-  padding: 10px;
-  background: rgba(0,0,0,0.9);
   display: flex;
   justify-content: space-between;
-  z-index: 100;
+  padding: 15px;
+  background: black;
 }
 
 .logo {
   color: red;
-  font-size: 20px;
+  font-size: 24px;
+  font-weight: bold;
 }
 
-.controls {
-  display: flex;
-  gap: 5px;
+#search {
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
 }
 
-select, input {
-  padding: 5px;
-  font-size: 12px;
-  background: black;
-  color: white;
-  border: 1px solid gray;
-}
-
-/* HERO */
-.hero {
-  height: 60vh;
-  background-size: cover;
-  display: flex;
-  align-items: flex-end;
-  padding: 20px;
-}
-
-/* ROW */
 .row {
-  padding-left: 10px;
-  margin-top: 10px;
+  margin: 20px;
+}
+
+.row h2 {
+  margin-left: 10px;
 }
 
 .row-posters {
@@ -61,55 +45,57 @@ select, input {
   overflow-x: auto;
 }
 
-/* POSTER */
-.poster-container {
-  margin-right: 8px;
-  cursor: pointer;
-}
-
 .poster {
-  width: 120px;
+  width: 150px;
+  margin: 10px;
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 
-@media (min-width: 768px) {
-  .poster {
-    width: 200px;
-  }
+.poster:hover {
+  transform: scale(1.1);
 }
 
 /* MODAL */
-#modal {
+.modal {
   position: fixed;
-  width:100%;
-  height:100%;
-  background: black;
-  display:none;
-  flex-direction: column;
-  z-index: 200;
-}
-
-#player {
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 60%;
-  border: none;
+  height: 100%;
+  display: none;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
 }
 
-/* PANEL */
-#episodePanel {
-  padding: 10px;
-  background: #111;
+.modal-content {
+  width: 90%;
+  max-width: 900px;
 }
 
-#episodePanel select {
+iframe {
   width: 100%;
-  margin-bottom: 5px;
+  height: 500px;
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+/* Episode selector */
+.episodes {
+  margin-top: 10px;
 }
 
 button {
-  padding: 10px;
-  border: none;
-  background: red;
-  color: white;
+  margin: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -117,206 +103,116 @@ button {
 <body>
 
 <header>
-  <div class="logo">MovieFlix</div>
-  <div class="controls">
-    <select id="type">
-      <option value="movie">Movies</option>
-      <option value="tv">Series</option>
-    </select>
-    <input id="search" placeholder="Search">
-  </div>
+  <div class="logo">MYFLIX</div>
+  <input type="text" id="search" placeholder="Search...">
 </header>
 
-<div class="hero" id="hero"></div>
-<div id="rows"></div>
+<div class="row">
+  <h2>Trending</h2>
+  <div class="row-posters" id="trending"></div>
+</div>
 
-<!-- PLAYER -->
-<div id="modal">
-  <button onclick="closePlayer()">Close</button>
+<div class="row">
+  <h2>TV Series</h2>
+  <div class="row-posters" id="tv"></div>
+</div>
 
-  <iframe 
-    id="player"
-    allow="autoplay; fullscreen"
-    allowfullscreen>
-  </iframe>
-
-  <div id="episodePanel" style="display:none;">
-    <select id="season"></select>
-    <select id="episode"></select>
-    <button onclick="loadEpisode()">Play Episode</button>
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <div class="modal-content">
+    <iframe id="player" src="" frameborder="0" allowfullscreen></iframe>
+    <div class="episodes" id="episodes"></div>
   </div>
 </div>
 
 <script>
-const API_KEY = "1d3ae144acfb6bfcb25f70361cedcf29";
-const BASE = "https://api.themoviedb.org/3";
+const API_KEY = "nx_ae62cfca602d97dc532d2f2282d4575a";
+const BASE_URL = "https://api.codespecters.com";
 
-let type = "movie";
-let currentId = null;
-
-/* TYPE SWITCH */
-document.getElementById("type").addEventListener("change", () => {
-  type = document.getElementById("type").value;
-  loadAll();
-});
-
-/* HERO */
-async function loadHero() {
-  const res = await fetch(`${BASE}/trending/${type}/day?api_key=${API_KEY}`);
-  const data = await res.json();
-  const m = data.results[0];
-
-  document.getElementById("hero").style.backgroundImage =
-    `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`;
-
-  document.getElementById("hero").innerHTML = `<h2>${m.title || m.name}</h2>`;
-}
-
-/* ROW */
-async function createRow(title, url) {
-  const res = await fetch(url);
+async function fetchMovies(endpoint, container) {
+  const res = await fetch(`${BASE_URL}${endpoint}&api_key=${API_KEY}`);
   const data = await res.json();
 
-  return `
-    <div class="row">
-      <h3>${title}</h3>
-      <div class="row-posters">
-        ${data.results.slice(0,10).map(m=>`
-          <div class="poster-container" data-id="${m.id}">
-            <img class="poster" src="https://image.tmdb.org/t/p/w300${m.poster_path}">
-          </div>
-        `).join("")}
-      </div>
-    </div>
-  `;
-}
+  container.innerHTML = "";
 
-/* CLICK EVENTS */
-function attachClickEvents() {
-  document.querySelectorAll(".poster-container").forEach(el => {
-    el.addEventListener("click", () => {
-      const id = el.getAttribute("data-id");
-      openPlayer(id);
-    });
+  data.results.forEach(item => {
+    const img = document.createElement("img");
+    img.src = item.poster;
+    img.classList.add("poster");
+
+    img.onclick = () => openPlayer(item);
+
+    container.appendChild(img);
   });
 }
 
-/* LOAD ROWS */
-async function loadRows() {
-  const rows = document.getElementById("rows");
-
-  const trending = await createRow("Trending", `${BASE}/trending/${type}/day?api_key=${API_KEY}`);
-  const topRated = await createRow("Top Rated", `${BASE}/${type}/top_rated?api_key=${API_KEY}`);
-  const comedy = await createRow("Comedy", `${BASE}/discover/${type}?api_key=${API_KEY}&with_genres=35`);
-
-  rows.innerHTML = trending + topRated + comedy;
-
-  attachClickEvents();
-}
-
-/* PLAYER (UPDATED STREAMING) */
-function openPlayer(id) {
-
-  currentId = id;
-
+function openPlayer(item) {
   const modal = document.getElementById("modal");
   const player = document.getElementById("player");
+  const episodesDiv = document.getElementById("episodes");
 
   modal.style.display = "flex";
 
-  if(type === "movie") {
-
-    document.getElementById("episodePanel").style.display = "none";
-
-    player.src =
-      `https://vidsrc.xyz/embed/movie/${id}`;
-
-  } else {
-
-    document.getElementById("episodePanel").style.display = "block";
-
-    player.src =
-      `https://vidsrc.xyz/embed/tv/${id}/1-1`;
-
-    loadSeasons(id);
+  // Movie
+  if (!item.seasons) {
+    player.src = `${BASE_URL}/embed/movie/${item.id}?api_key=${API_KEY}`;
+    episodesDiv.innerHTML = "";
+  } 
+  // TV Series
+  else {
+    loadEpisodes(item.id, 1);
   }
 }
 
-/* CLOSE */
-function closePlayer() {
+function loadEpisodes(id, season) {
+  const player = document.getElementById("player");
+  const episodesDiv = document.getElementById("episodes");
+
+  episodesDiv.innerHTML = "";
+
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = "Ep " + i;
+
+    btn.onclick = () => {
+      player.src = `${BASE_URL}/embed/tv/${id}/${season}/${i}?api_key=${API_KEY}`;
+    };
+
+    episodesDiv.appendChild(btn);
+  }
+}
+
+function closeModal() {
   document.getElementById("modal").style.display = "none";
   document.getElementById("player").src = "";
 }
 
-/* SEASONS */
-async function loadSeasons(id) {
-  const res = await fetch(`${BASE}/tv/${id}?api_key=${API_KEY}`);
+document.getElementById("search").addEventListener("input", async (e) => {
+  const query = e.target.value;
+
+  if (!query) return;
+
+  const res = await fetch(`${BASE_URL}/search?q=${query}&api_key=${API_KEY}`);
   const data = await res.json();
 
-  document.getElementById("season").innerHTML =
-    data.seasons.map(s =>
-      `<option value="${s.season_number}">Season ${s.season_number}</option>`
-    ).join("");
+  const trending = document.getElementById("trending");
+  trending.innerHTML = "";
 
-  loadEpisodes();
-}
+  data.results.forEach(item => {
+    const img = document.createElement("img");
+    img.src = item.poster;
+    img.classList.add("poster");
 
-/* EPISODES */
-async function loadEpisodes() {
-  const season = document.getElementById("season").value;
+    img.onclick = () => openPlayer(item);
 
-  const res = await fetch(`${BASE}/tv/${currentId}/season/${season}?api_key=${API_KEY}`);
-  const data = await res.json();
-
-  document.getElementById("episode").innerHTML =
-    data.episodes.map(e =>
-      `<option value="${e.episode_number}">Episode ${e.episode_number}</option>`
-    ).join("");
-}
-
-/* PLAY EPISODE */
-function loadEpisode() {
-  const season = document.getElementById("season").value;
-  const episode = document.getElementById("episode").value;
-
-  document.getElementById("player").src =
-    `https://vidsrc.xyz/embed/tv/${currentId}/${season}-${episode}`;
-}
-
-document.getElementById("season").addEventListener("change", loadEpisodes);
-
-/* SEARCH */
-document.getElementById("search").addEventListener("input", async e => {
-  const q = e.target.value;
-
-  if (!q) return loadRows();
-
-  const res = await fetch(`${BASE}/search/${type}?api_key=${API_KEY}&query=${q}`);
-  const data = await res.json();
-
-  document.getElementById("rows").innerHTML = `
-    <div class="row">
-      <h3>Results</h3>
-      <div class="row-posters">
-        ${data.results.map(m=>`
-          <div class="poster-container" data-id="${m.id}">
-            <img class="poster" src="https://image.tmdb.org/t/p/w300${m.poster_path}">
-          </div>
-        `).join("")}
-      </div>
-    </div>
-  `;
-
-  attachClickEvents();
+    trending.appendChild(img);
+  });
 });
 
-/* INIT */
-async function loadAll() {
-  await loadHero();
-  await loadRows();
-}
-
-loadAll();
+// LOAD DATA
+fetchMovies("/movies/trending?", document.getElementById("trending"));
+fetchMovies("/tv/popular?", document.getElementById("tv"));
 </script>
 
 </body>
