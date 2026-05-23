@@ -26,8 +26,10 @@ border-radius:20px;color:white;
 
 /* HERO */
 .hero{
-height:90vh;display:flex;
-align-items:flex-end;padding:60px;
+height:90vh;
+display:flex;
+align-items:flex-end;
+padding:60px;
 background-size:cover;
 position:relative;
 }
@@ -43,45 +45,66 @@ background:linear-gradient(to top,#141414,transparent);
 .row{margin-top:-80px;padding-left:40px;margin-bottom:30px;}
 .row h2{margin-bottom:10px;}
 
-/* SCROLL CONTAINER */
+/* ROW CONTAINER */
 .row-container{position:relative;}
 
 .row-posters{
 display:flex;
+gap:12px;
 overflow-x:auto;
 scroll-behavior:smooth;
-padding:10px 0;
+padding:20px 0;
 }
 .row-posters::-webkit-scrollbar{display:none;}
 
-/* POSTER */
-.poster{
-width:180px;margin-right:10px;
-border-radius:6px;
+/* LANDSCAPE */
+.poster-landscape{
+width:260px;height:150px;
+border-radius:8px;
+overflow:hidden;
 cursor:pointer;
-transition:transform 0.3s;
+transition:0.3s;
+flex-shrink:0;
 position:relative;
 }
-
-.poster:hover{
-transform:scale(1.2);
+.poster-landscape img{
+width:100%;height:100%;object-fit:cover;
+}
+.poster-landscape:hover{
+transform:scale(1.15);
 z-index:10;
 }
 
-/* HOVER OVERLAY */
-.overlay{
-position:absolute;
-bottom:0;
-left:0;
-width:100%;
-background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);
-padding:10px;
-opacity:0;
+/* PORTRAIT */
+.poster-portrait{
+width:160px;height:240px;
+border-radius:8px;
+overflow:hidden;
+cursor:pointer;
 transition:0.3s;
-font-size:12px;
+flex-shrink:0;
+position:relative;
+}
+.poster-portrait img{
+width:100%;height:100%;object-fit:cover;
+}
+.poster-portrait:hover{
+transform:scale(1.15);
+z-index:10;
 }
 
-.poster:hover .overlay{
+/* OVERLAY */
+.overlay{
+position:absolute;
+bottom:0;left:0;width:100%;
+padding:10px;
+background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);
+font-size:12px;
+opacity:0;
+transition:0.3s;
+}
+.poster-landscape:hover .overlay,
+.poster-portrait:hover .overlay{
 opacity:1;
 }
 
@@ -97,11 +120,7 @@ cursor:pointer;
 z-index:20;
 display:none;
 }
-
-.row-container:hover .arrow{
-display:block;
-}
-
+.row-container:hover .arrow{display:block;}
 .left{left:0;}
 .right{right:0;}
 
@@ -109,7 +128,8 @@ display:block;
 @media(max-width:768px){
 .hero{height:70vh;padding:20px;}
 .hero h1{font-size:30px;}
-.poster{width:130px;}
+.poster-landscape{width:180px;height:110px;}
+.poster-portrait{width:120px;height:180px;}
 .arrow{display:none!important;}
 }
 </style>
@@ -117,13 +137,11 @@ display:block;
 
 <body>
 
-<!-- NAV -->
 <div class="nav" id="nav">
 <div class="logo">KENFLIX</div>
 <input type="text" id="search" class="search" placeholder="Search...">
 </div>
 
-<!-- HERO -->
 <div class="hero" id="hero">
 <div class="hero-content">
 <h1 id="hero-title">Loading...</h1>
@@ -131,9 +149,10 @@ display:block;
 </div>
 </div>
 
-<!-- ROW TEMPLATE -->
+<!-- ROWS -->
+
 <div class="row">
-<h2>Trending</h2>
+<h2>Trending Now</h2>
 <div class="row-container">
 <div class="arrow left" onclick="scrollRow('trending',-1)">‹</div>
 <div class="arrow right" onclick="scrollRow('trending',1)">›</div>
@@ -151,6 +170,15 @@ display:block;
 </div>
 
 <div class="row">
+<h2>Action Movies</h2>
+<div class="row-container">
+<div class="arrow left" onclick="scrollRow('action',-1)">‹</div>
+<div class="arrow right" onclick="scrollRow('action',1)">›</div>
+<div class="row-posters" id="action"></div>
+</div>
+</div>
+
+<div class="row">
 <h2>TV Shows</h2>
 <div class="row-container">
 <div class="arrow left" onclick="scrollRow('tv',-1)">‹</div>
@@ -161,9 +189,9 @@ display:block;
 
 <script>
 
-const API_KEY = "1d3ae144acfb6bfcb25f70361cedcf29";
-const IMG = "https://image.tmdb.org/t/p/original";
-const API = "https://api.themoviedb.org/3";
+const API_KEY="1d3ae144acfb6bfcb25f70361cedcf29";
+const API="https://api.themoviedb.org/3";
+const IMG="https://image.tmdb.org/t/p/original";
 
 /* NAV SCROLL */
 window.addEventListener("scroll",()=>{
@@ -172,38 +200,37 @@ document.getElementById("nav").classList.toggle("scrolled",window.scrollY>50);
 
 /* HERO */
 async function loadHero(){
-const res = await fetch(`${API}/trending/movie/week?api_key=${API_KEY}`);
-const data = await res.json();
-const movie = data.results[Math.floor(Math.random()*data.results.length)];
+const res=await fetch(`${API}/trending/movie/week?api_key=${API_KEY}`);
+const data=await res.json();
+const m=data.results[Math.floor(Math.random()*data.results.length)];
 
-document.getElementById("hero").style.backgroundImage =
-`url(${IMG + movie.backdrop_path})`;
-
-document.getElementById("hero-title").innerText = movie.title;
-document.getElementById("hero-desc").innerText = movie.overview;
+document.getElementById("hero").style.backgroundImage=`url(${IMG+m.backdrop_path})`;
+document.getElementById("hero-title").innerText=m.title;
+document.getElementById("hero-desc").innerText=m.overview;
 }
 
 /* FETCH ROW */
-async function fetchRow(url, container, type){
-const res = await fetch(url);
-const data = await res.json();
+async function fetchRow(url,container,type,style){
+const res=await fetch(url);
+const data=await res.json();
 
-container.innerHTML = "";
+container.innerHTML="";
 
 data.results.forEach(item=>{
-if(!item.poster_path) return;
+if(!item.poster_path&&!item.backdrop_path)return;
 
-const div = document.createElement("div");
-div.classList.add("poster");
+const div=document.createElement("div");
+div.classList.add(style==="landscape"?"poster-landscape":"poster-portrait");
 
-div.innerHTML = `
-<img src="${IMG + item.poster_path}" width="100%">
-<div class="overlay">${item.title || item.name}</div>
+const imgPath=style==="landscape"?item.backdrop_path:item.poster_path;
+
+div.innerHTML=`
+<img src="${IMG+imgPath}">
+<div class="overlay">${item.title||item.name}</div>
 `;
 
-div.onclick = ()=>{
-window.location.href =
-`watch.html?id=${item.id}&type=${type}`;
+div.onclick=()=>{
+window.location.href=`watch.html?id=${item.id}&type=${type}`;
 };
 
 container.appendChild(div);
@@ -212,38 +239,33 @@ container.appendChild(div);
 
 /* SCROLL */
 function scrollRow(id,dir){
-const row = document.getElementById(id);
-row.scrollBy({
-left: dir * 500,
-behavior:"smooth"
-});
+document.getElementById(id).scrollBy({left:dir*500,behavior:"smooth"});
 }
 
 /* SEARCH */
-document.getElementById("search").addEventListener("keyup", async(e)=>{
-const q = e.target.value;
-if(q.length < 2) return;
+document.getElementById("search").addEventListener("keyup",async(e)=>{
+const q=e.target.value;
+if(q.length<2)return;
 
-const res = await fetch(`${API}/search/multi?api_key=${API_KEY}&query=${q}`);
-const data = await res.json();
+const res=await fetch(`${API}/search/multi?api_key=${API_KEY}&query=${q}`);
+const data=await res.json();
 
-const trending = document.getElementById("trending");
-trending.innerHTML = "";
+const trending=document.getElementById("trending");
+trending.innerHTML="";
 
 data.results.forEach(item=>{
-if(!item.poster_path) return;
+if(!item.poster_path)return;
 
-const div = document.createElement("div");
-div.classList.add("poster");
+const div=document.createElement("div");
+div.classList.add("poster-portrait");
 
-div.innerHTML = `
-<img src="${IMG + item.poster_path}" width="100%">
-<div class="overlay">${item.title || item.name}</div>
+div.innerHTML=`
+<img src="${IMG+item.poster_path}">
+<div class="overlay">${item.title||item.name}</div>
 `;
 
-div.onclick = ()=>{
-window.location.href =
-`watch.html?id=${item.id}&type=${item.media_type==="tv"?"tv":"movie"}`;
+div.onclick=()=>{
+window.location.href=`watch.html?id=${item.id}&type=${item.media_type==="tv"?"tv":"movie"}`;
 };
 
 trending.appendChild(div);
@@ -253,9 +275,10 @@ trending.appendChild(div);
 /* LOAD */
 loadHero();
 
-fetchRow(`${API}/trending/movie/week?api_key=${API_KEY}`,document.getElementById("trending"),"movie");
-fetchRow(`${API}/movie/top_rated?api_key=${API_KEY}`,document.getElementById("top"),"movie");
-fetchRow(`${API}/tv/popular?api_key=${API_KEY}`,document.getElementById("tv"),"tv");
+fetchRow(`${API}/trending/movie/week?api_key=${API_KEY}`,trending,"movie","landscape");
+fetchRow(`${API}/movie/top_rated?api_key=${API_KEY}`,top,"movie","portrait");
+fetchRow(`${API}/discover/movie?api_key=${API_KEY}&with_genres=28`,action,"movie","portrait");
+fetchRow(`${API}/tv/popular?api_key=${API_KEY}`,tv,"tv","landscape");
 
 </script>
 
